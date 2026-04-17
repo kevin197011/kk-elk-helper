@@ -7,6 +7,7 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: '/api/v1',
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -34,7 +35,9 @@ api.interceptors.response.use(
       // Clear token and redirect to login
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      if (window.location.pathname !== '/login') {
+        window.location.replace('/login');
+      }
     }
     return Promise.reject(error);
   }

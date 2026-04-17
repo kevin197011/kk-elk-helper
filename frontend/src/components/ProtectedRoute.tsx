@@ -12,10 +12,10 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, authStatus } = useAuth();
   const location = useLocation();
 
-  if (isLoading) {
+  if (isLoading || authStatus === 'checking') {
     return (
       <div style={{ 
         height: '100vh', 
@@ -28,7 +28,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (authStatus === 'guest' || !isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

@@ -3,8 +3,8 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Typography, App, theme, Card, Space } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,23 +13,38 @@ const { Title, Text } = Typography;
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isAuthenticated, authStatus } = useAuth();
   const { message } = App.useApp();
   const navigate = useNavigate();
+  const location = useLocation();
   const { token } = theme.useToken();
+  const redirectTo = useMemo(() => {
+    const from = (location.state as any)?.from?.pathname;
+    return typeof from === 'string' && from.startsWith('/') ? from : '/';
+  }, [location.state]);
+
+  useEffect(() => {
+    if (authStatus === 'authenticated' && isAuthenticated) {
+      navigate(redirectTo, { replace: true });
+    }
+  }, [authStatus, isAuthenticated, navigate, redirectTo]);
 
   const handleSubmit = async (values: { username: string; password: string }) => {
     setLoading(true);
     try {
       await login(values.username, values.password);
       message.success('登录成功，欢迎回来！');
-      navigate('/');
+      navigate(redirectTo, { replace: true });
     } catch (error: any) {
       message.error(error.response?.data?.error || '用户名或密码错误');
     } finally {
       setLoading(false);
     }
   };
+
+  if (authStatus === 'authenticated' && isAuthenticated) {
+    return <Navigate to={redirectTo} replace />;
+  }
 
   return (
     <div
